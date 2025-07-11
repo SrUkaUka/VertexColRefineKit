@@ -340,7 +340,7 @@ class ConvertToFaceCornerOperator(bpy.types.Operator):
 
 class VLP_PT_panel(bpy.types.Panel):
     """UI panel for the Vertex Light Painter."""
-    bl_label = "Vertex Light Painter"
+    bl_label = "Dynamic Vertex Color"
     bl_idname = "VLP_PT_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
