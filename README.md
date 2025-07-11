@@ -3,10 +3,13 @@ Blender set of tools to bake lighting, create dynamic vertex colors, randomize, 
 
 ## Feautures
 - **Bake Lighting to Vertex Colors**
-- **Dynamic Vertex Color**
+- **Dynamic Vertex Color painting**
 - **Color Randomizer**
-- **Color Palette Reporting and Optimization**
-- **Vertex Color Sliders UI**
+- **Color Palette Reporting**
+- **Vertex Color optimization**
+- **Update current colors**
+- **Vertex Color Sliders**
+- **Color Gradient**
 - **Animate Vertex Color**
 
 ## Installation
