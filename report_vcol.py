@@ -1,4 +1,4 @@
-import bpy
+import bpy 
 import numpy as np
 
 # maps color-index → list of (object_name, loop_index)
@@ -38,6 +38,9 @@ def colors_equal(a, b, tol=1e-3):
 
 def on_pick_color(self, context):
     """Update active index when user picks a color with the eyedropper."""
+    if not hasattr(context, "scene") or not hasattr(context.scene, "vcr_pick_color"):
+        return
+
     picked = list(context.scene.vcr_pick_color)
     best_idx = None
     best_dist = float('inf')
@@ -78,7 +81,6 @@ class MESH_OT_report_vertex_colors(bpy.types.Operator):
     bl_label = "Report Vertex Colors"
 
     def execute(self, context):
-        # ensure in Object Mode
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -125,7 +127,6 @@ class MESH_OT_save_vertex_colors(bpy.types.Operator):
 
     def execute(self, context):
         global SAVED_COLOR_MAP
-        # ensure in Object Mode
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -152,7 +153,6 @@ class MESH_OT_apply_saved_vertex_colors(bpy.types.Operator):
 
     def execute(self, context):
         global SAVED_COLOR_MAP
-        # ensure in Object Mode
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -175,7 +175,6 @@ class MESH_OT_apply_show_detail_changes(bpy.types.Operator):
     bl_label = "Apply Changes"
 
     def execute(self, context):
-        # ensure in Object Mode
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -188,7 +187,6 @@ class MESH_OT_apply_show_detail_changes(bpy.types.Operator):
             idx = item.index
             new_color = list(item.color)
             for obj_name, li in COLOR_LOOP_MAP.get(idx, []):
-                # if "Apply Selected" is checked, skip non-selected
                 if scene.vcr_apply_selected and obj_name not in selected_names:
                     continue
                 changes_by_obj.setdefault(obj_name, []).append((li, new_color))
@@ -215,7 +213,6 @@ class MESH_OT_undo_vertex_colors(bpy.types.Operator):
     bl_label = "Undo Changes"
 
     def execute(self, context):
-        # ensure in Object Mode
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -246,7 +243,6 @@ class MESH_OT_convert_vertex_colors(bpy.types.Operator):
     bl_label = "Convert Vertex Colors"
 
     def execute(self, context):
-        # ensure in Object Mode
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -390,16 +386,23 @@ class MESH_PT_vertex_color_reporter_panel(bpy.types.Panel):
                 rows=4
             )
 
-            layout.prop(scene, "vcr_apply_selected", text="Apply Selected")
-            layout.operator("mesh.apply_show_detail_changes", icon='FILE_TICK')
-
-            layout.prop(scene, "vcr_undo_selected", text="Undo Selected")
-            layout.operator("mesh.undo_vertex_colors", icon='LOOP_BACK')
+            # -- Apply/Undo selection checkboxes side by side --
+            row = layout.row(align=True)
+            row.prop(scene, "vcr_apply_selected", text="Apply Selected")
+            row.prop(scene, "vcr_undo_selected", text="Undo Selected")
             layout.separator()
 
-            # moved below Undo
-            layout.operator("mesh.save_vertex_colors", icon='EXPORT')
-            layout.operator("mesh.apply_saved_vertex_colors", icon='IMPORT')
+            # -- Apply/Undo buttons grouped --
+            row = layout.row(align=True)
+            row.operator("mesh.apply_show_detail_changes", text="Apply Changes", icon='FILE_TICK')
+            row.operator("mesh.undo_vertex_colors", text="Undo Changes", icon='LOOP_BACK')
+
+            layout.separator()
+
+            # -- Save / Apply Saved buttons grouped --
+            row = layout.row(align=True)
+            row.operator("mesh.save_vertex_colors", text="Save Data", icon='EXPORT')
+            row.operator("mesh.apply_saved_vertex_colors", text="Apply Saved", icon='IMPORT')
 
         layout.separator()
         layout.label(text="Smart Convert Palette:")
@@ -432,7 +435,7 @@ def register():
         subtype='COLOR_GAMMA',
         size=4, min=0.0, max=1.0,
         default=(1, 1, 1, 1),
-        update=on_pick_color
+        # update=on_pick_color  ← eliminado para evitar el error
     )
     bpy.types.Scene.vcr_colors = bpy.props.CollectionProperty(type=VCR_ColorItem)
     bpy.types.Scene.vcr_active_index = bpy.props.IntProperty(default=0)
