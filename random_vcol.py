@@ -1,5 +1,7 @@
 import bpy
 import random
+import json
+from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 # ------------------------------
 # Custom Color Items & Presets
@@ -242,6 +244,76 @@ class VLP_OT_delete_preset(bpy.types.Operator):
         return {'FINISHED'}
 
 # ------------------------------
+# Export Presets to JSON
+# ------------------------------
+class VLP_OT_export_presets(bpy.types.Operator, ExportHelper):
+    """Export all saved presets to a JSON file"""
+    bl_idname = "vlp.export_presets"
+    bl_label = "Export Presets"
+    filename_ext = ".json"
+    filter_glob: bpy.props.StringProperty(
+        default="*.json",
+        options={'HIDDEN'},
+    )
+
+    def execute(self, context):
+        props = context.scene.vlp_scene
+        data = []
+        for preset in props.presets:
+            entry = {
+                "name": preset.name,
+                "mode": preset.mode,
+                "seed": preset.seed_custom,
+                "colors": [list(ci.color) for ci in preset.colors]
+            }
+            data.append(entry)
+        try:
+            with open(self.filepath, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=4)
+            self.report({'INFO'}, f"Exported {len(data)} presets to {self.filepath}")
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to export presets: {e}")
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+# ------------------------------
+# Import Presets from JSON
+# ------------------------------
+class VLP_OT_import_presets(bpy.types.Operator, ImportHelper):
+    """Import presets from a JSON file"""
+    bl_idname = "vlp.import_presets"
+    bl_label = "Import Presets"
+    filename_ext = ".json"
+    filter_glob: bpy.props.StringProperty(
+        default="*.json",
+        options={'HIDDEN'},
+    )
+
+    def execute(self, context):
+        props = context.scene.vlp_scene
+        try:
+            with open(self.filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to read file: {e}")
+            return {'CANCELLED'}
+
+        # Clear existing presets
+        props.presets.clear()
+        for entry in data:
+            preset = props.presets.add()
+            preset.name = entry.get("name", "Preset")
+            preset.mode = entry.get("mode", 'SOLID')
+            preset.seed_custom = entry.get("seed", 0)
+            preset.colors.clear()
+            for col in entry.get("colors", []):
+                ci = preset.colors.add()
+                ci.color = col if len(col) == 4 else (*col[:3], 1.0)
+        props.preset_index = 0
+        self.report({'INFO'}, f"Imported {len(props.presets)} presets from {self.filepath}")
+        return {'FINISHED'}
+
+# ------------------------------
 # Operator to convert color attributes to vertex colors
 # ------------------------------
 class ConvertToVertexColorOperator(bpy.types.Operator):
@@ -316,11 +388,9 @@ class VLP_OT_randomize_vertex_colors(bpy.types.Operator):
         for obj in target_objs:
             mesh = obj.data
             name = props.attribute_name
-            # remove color_attributes
             existing_attr = mesh.color_attributes.get(name)
             if existing_attr:
                 mesh.color_attributes.remove(existing_attr)
-            # remove vertex_colors
             idx_vc_old = mesh.vertex_colors.find(name)
             if idx_vc_old != -1:
                 mesh.vertex_colors.remove(mesh.vertex_colors[idx_vc_old])
@@ -332,16 +402,12 @@ class VLP_OT_randomize_vertex_colors(bpy.types.Operator):
                 obj.select_set(True)
                 mesh = obj.data
                 name = props.attribute_name
-
-                # Create and activate the new attribute/layer
                 mesh.vertex_colors.new(name=name)
                 idx_vc_new = mesh.vertex_colors.find(name)
                 mesh.vertex_colors.active_index = idx_vc_new
                 mesh.color_attributes.active_color_index = next(
                     i for i, a in enumerate(mesh.color_attributes) if a.name == name
                 )
-
-                # Convert domain to POINT/FLOAT_COLOR
                 try:
                     bpy.ops.geometry.color_attribute_convert(
                         domain='POINT',
@@ -349,10 +415,7 @@ class VLP_OT_randomize_vertex_colors(bpy.types.Operator):
                     )
                 except Exception as e:
                     self.report({'WARNING'}, f"Could not convert '{name}': {e}")
-
                 obj.select_set(False)
-
-            # Redraw 3D views and finish
             for area in context.screen.areas:
                 if area.type == 'VIEW_3D':
                     area.tag_redraw()
@@ -371,8 +434,6 @@ class VLP_OT_randomize_vertex_colors(bpy.types.Operator):
             obj.select_set(True)
             mesh = obj.data
             layer_name = props.attribute_name
-
-            # Ensure layer exists and get its index
             idx_vc = mesh.vertex_colors.find(layer_name)
             if idx_vc == -1:
                 mesh.vertex_colors.new(name=layer_name)
@@ -381,20 +442,17 @@ class VLP_OT_randomize_vertex_colors(bpy.types.Operator):
             vcol = mesh.vertex_colors[idx_vc]
 
             if mode == 'SOLID':
-                # One color per polygon
                 for poly in mesh.polygons:
                     color = [random.random() for _ in range(3)] + [1.0]
                     for li in poly.loop_indices:
                         vcol.data[li].color = color
 
             elif mode == 'DIFFUSE':
-                # One color per vertex
                 for poly in mesh.polygons:
                     for li in poly.loop_indices:
                         vcol.data[li].color = [random.random() for _ in range(3)] + [1.0]
 
             else:  # CUSTOM
-                # User-defined colors
                 if not props.custom_colors:
                     self.report({'WARNING'}, "No custom colors defined")
                     break
@@ -403,7 +461,6 @@ class VLP_OT_randomize_vertex_colors(bpy.types.Operator):
                         cc = random.choice(props.custom_colors).color
                         vcol.data[li].color = (*cc[:3], 1.0)
 
-            # Optional smoothing
             if props.smooth:
                 bpy.ops.object.mode_set(mode='VERTEX_PAINT')
                 mesh.vertex_colors.active_index = idx_vc
@@ -412,7 +469,6 @@ class VLP_OT_randomize_vertex_colors(bpy.types.Operator):
 
             obj.select_set(False)
 
-        # Restore original mode and redraw views
         if prev_mode not in {'OBJECT', 'VERTEX_PAINT'}:
             bpy.ops.object.mode_set(mode=prev_mode)
         for area in context.screen.areas:
@@ -480,6 +536,11 @@ class VLP_PT_random_panel(bpy.types.Panel):
         layout.prop(props, 'attribute_name', text="Layer Name")
         layout.operator('vlp.randomize_vertex_colors', icon='SHADERFX', text='Apply Random')
 
+        layout.separator()
+        row = layout.row(align=True)
+        row.operator('vlp.export_presets', text='Export Preset', icon='EXPORT')
+        row.operator('vlp.import_presets', text='Import Preset', icon='IMPORT')
+
 # ------------------------------
 # Registration
 # ------------------------------
@@ -488,6 +549,7 @@ classes = [
     VLP_UL_custom_colors,
     VLP_OT_add_custom_color, VLP_OT_remove_custom_color, VLP_OT_reset_custom_colors,
     VLP_OT_save_preset, VLP_OT_toggle_presets, VLP_OT_apply_preset, VLP_OT_delete_preset,
+    VLP_OT_export_presets, VLP_OT_import_presets,
     ConvertToVertexColorOperator, VLP_OT_randomize_vertex_colors,
     VLP_PT_random_panel
 ]
