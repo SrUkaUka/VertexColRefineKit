@@ -197,7 +197,7 @@ def live_update(self, context):
 # Panel redesign
 # -----------------------------
 class VertexColorPanel(bpy.types.Panel):
-    bl_label = "Vertex Color Tools"
+    bl_label = "Vertex Color Toolset"
     bl_idname = "VIEW3D_PT_vertex_color_tools"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
