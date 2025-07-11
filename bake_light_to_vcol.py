@@ -176,7 +176,7 @@ def update_light_type(self, context):
         obj.data.type = context.scene.light_type
 
 class VertexLightingPanel(bpy.types.Panel):
-    bl_label = "Vertex Lighting & Texture Nodes"
+    bl_label = "Vertex Color Bake"
     bl_idname = "VIEW3D_PT_vertex_lighting_and_texture"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
