@@ -283,7 +283,7 @@ class VertexColorPanel(bpy.types.Panel):
 
         # Gradient Settings
         layout.separator()
-        layout.operator("object.vc_show_gradient", text="Gradient Settings", icon='IPO_LINEAR')
+        layout.operator("object.vc_show_gradient", text="Gradient Settings", icon='GROUP_VCOL')
         if obj.show_vc_gradient:
             box = layout.box()
             box.prop(obj, "vc_gradient_axis", text="Mode")
@@ -364,6 +364,7 @@ class VertexColorPanel(bpy.types.Panel):
 class VCInvert(bpy.types.Operator):
     bl_idname = "object.vc_invert"
     bl_label = "Invert Vertex Colors"
+    bl_description = "Invert the RGB components of the vertex colors"
     def execute(self, context):
         obj = context.object
         if obj and obj.type == 'MESH':
@@ -377,6 +378,7 @@ class VCInvert(bpy.types.Operator):
 class VCSmooth(bpy.types.Operator):
     bl_idname = "object.vc_smooth"
     bl_label = "Smooth Vertex Colors"
+    bl_description = "Smooth transition between adjacent colors"
     def execute(self, context):
         run_in_vertex_paint_mode(bpy.ops.paint.vertex_color_smooth)
         return {'FINISHED'}
@@ -384,6 +386,7 @@ class VCSmooth(bpy.types.Operator):
 class VCDirty(bpy.types.Operator):
     bl_idname = "object.vc_dirty"
     bl_label = "Dirty Vertex Colors"
+    bl_description = "Dirty and darken transition between adjacent colors"
     def execute(self, context):
         run_in_vertex_paint_mode(bpy.ops.paint.vertex_color_dirt)
         return {'FINISHED'}
@@ -391,6 +394,7 @@ class VCDirty(bpy.types.Operator):
 class VCSetColor(bpy.types.Operator):
     bl_idname = "object.vc_set_color"
     bl_label = "Set Vertex Color"
+    bl_description = "Set the selected color to active mesh"
     def execute(self, context):
         run_in_vertex_paint_mode(bpy.ops.paint.vertex_color_set)
         return {'FINISHED'}
@@ -398,7 +402,7 @@ class VCSetColor(bpy.types.Operator):
 class VCSharpColor(bpy.types.Operator):
     bl_idname = "object.vc_sharp_color"
     bl_label = "Sharp Color"
-    bl_description = "Apply flat (non‑smooth) vertex coloring per face"
+    bl_description = "Apply flat vertex coloring per face"
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
@@ -437,6 +441,7 @@ class VCCleanColor(bpy.types.Operator):
 class VCSampleColor(bpy.types.Operator):
     bl_idname = "object.vc_sample_color"
     bl_label = "Sample Vertex Color"
+    bl_description = "Color selection palette" 
     def execute(self, context):
         run_in_vertex_paint_mode(bpy.ops.paint.sample_color, location=(300,100))
         return {'FINISHED'}
@@ -447,6 +452,7 @@ class VCSampleColor(bpy.types.Operator):
 class VCShowFineTune(bpy.types.Operator):
     bl_idname = "object.vc_show_fine_tune"
     bl_label = "Toggle Fine‑Tune"
+    bl_description = "Toggle advanced adjustments"
     def execute(self, context):
         for obj in context.selected_objects:
             if obj.type == 'MESH':
@@ -457,6 +463,7 @@ class VCShowFineTune(bpy.types.Operator):
 class VCAcceptChanges(bpy.types.Operator):
     bl_idname = "object.vc_accept_changes"
     bl_label = "Apply Fine‑Tune"
+    bl_description = "Apply new values to active mesh"
     def execute(self, context):
         for obj in context.selected_objects:
             if obj.show_vc_fine_tune:
@@ -480,6 +487,7 @@ class VCAcceptChanges(bpy.types.Operator):
 class VCCancelChanges(bpy.types.Operator):
     bl_idname = "object.vc_cancel_changes"
     bl_label = "Cancel Fine‑Tune"
+    bl_description = "Cancel new values to active mesh"
     def execute(self, context):
         for obj in context.selected_objects:
             if obj.show_vc_fine_tune:
@@ -503,6 +511,7 @@ class VCCancelChanges(bpy.types.Operator):
 class VCResetValues(bpy.types.Operator):
     bl_idname = "object.vc_reset_values"
     bl_label = "Reset Fine‑Tune Sliders"
+    bl_description = "Resets current values to default"
     def execute(self, context):
         for obj in context.selected_objects:
             if obj.show_vc_fine_tune:
@@ -524,6 +533,7 @@ class VCResetValues(bpy.types.Operator):
 class VCSaveValues(bpy.types.Operator):
     bl_idname = "object.vc_save_values"
     bl_label = "Save Fine‑Tune Values"
+    bl_description = "Save values of the active mesh"
     def execute(self, context):
         obj = context.object
         if obj and obj.type == 'MESH':
@@ -542,6 +552,7 @@ class VCSaveValues(bpy.types.Operator):
 class VCApplySavedValues(bpy.types.Operator):
     bl_idname = "object.vc_apply_saved_values"
     bl_label = "Apply Saved Values"
+    bl_description = "Apply saved values to active mesh"
     def execute(self, context):
         if not saved_values:
             self.report({'WARNING'}, "No saved values")
@@ -617,6 +628,7 @@ def validate_color_keyframes_handler(scene):
 class VCToggleAnimate(bpy.types.Operator):
     bl_idname = "object.vc_toggle_animate"
     bl_label = "Toggle Animate Color Panel"
+    bl_description = "Toggle animation panel"
     def execute(self, context):
         scene = context.scene
         handlers = bpy.app.handlers.frame_change_post
@@ -661,6 +673,7 @@ class VCToggleAnimate(bpy.types.Operator):
 class VCStoreData(bpy.types.Operator):
     bl_idname = "object.vc_store_data"
     bl_label = "Store Data"
+    bl_description = "Store animation data"
     def execute(self, context):
         global vertex_data_store
         names = {o.name for o in context.selected_objects if o.vc_animate_enabled}
@@ -693,6 +706,7 @@ class VCStoreData(bpy.types.Operator):
 class VCApplyAnimate(bpy.types.Operator):
     bl_idname = "object.vc_apply_animate"
     bl_label = "Apply Animate Color"
+    bl_description = "Apply animation changes to active mesh"
     def execute(self, context):
         scene, frames = context.scene, set()
         for obj in context.selected_objects:
@@ -730,6 +744,7 @@ class VCApplyAnimate(bpy.types.Operator):
 class VCCancelAnimate(bpy.types.Operator):
     bl_idname = "object.vc_cancel_animate"
     bl_label = "Cancel Animate Color"
+    bl_description = "Cancel Animation, deletes last keyframes additions"
     def execute(self, context):
         for obj in context.selected_objects:
             if obj.vc_animate_enabled:
@@ -747,6 +762,7 @@ class VCCancelAnimate(bpy.types.Operator):
 class VCAddFrame(bpy.types.Operator):
     bl_idname = "object.vc_add_frame"
     bl_label = "Add Frame"
+    bl_description = "Adds a keyframe to the timeline from current color"
     def execute(self, context):
         frame = context.scene.frame_current
         for obj in context.selected_objects:
@@ -775,6 +791,7 @@ class VCAddFrame(bpy.types.Operator):
 class VCRemoveFrame(bpy.types.Operator):
     bl_idname = "object.vc_remove_frame"
     bl_label = "Remove Frame"
+    bl_description = "Removes selected keyframe of the timeline"
     def execute(self, context):
         frame = context.scene.frame_current
         for obj in context.selected_objects:
@@ -809,6 +826,7 @@ class VCRemoveFrame(bpy.types.Operator):
 class VCExportAnimation(bpy.types.Operator, ExportHelper):
     bl_idname = "object.vc_export_animation"
     bl_label = "Export Animation Data"
+    bl_description = "Export animation as .json"
     filename_ext = ".json"
     filter_glob: bpy.props.StringProperty(default="*.json", options={'HIDDEN'})
     def execute(self, context):
@@ -829,6 +847,7 @@ class VCExportAnimation(bpy.types.Operator, ExportHelper):
 class VCLoadAnimatedData(bpy.types.Operator, ImportHelper):
     bl_idname = "object.vc_load_animated_data"
     bl_label = "Load Animated Data"
+    bl_description = "Load animation as json"
     filename_ext = ".json"
     filter_glob: bpy.props.StringProperty(default="*.json", options={'HIDDEN'})
     def execute(self, context):
@@ -863,7 +882,7 @@ class VCLoadAnimatedData(bpy.types.Operator, ImportHelper):
 class VCShowGradient(bpy.types.Operator):
     bl_idname = "object.vc_show_gradient"
     bl_label = "Gradient Settings"
-    bl_description = "Mostrar u ocultar controles de gradiente"
+    bl_description = "Show or Hide gradient settings"
 
     def execute(self, context):
         for obj in context.selected_objects:
@@ -889,7 +908,7 @@ class VCShowGradient(bpy.types.Operator):
 class VCGradientColor(bpy.types.Operator):
     bl_idname = "object.vc_set_gradient"
     bl_label = "Gradient Color"
-    bl_description = "Aplica un gradiente multicolor según la orientación seleccionada"
+    bl_description = "Applys custom gradient values to active mesh"
 
     def execute(self, context):
         import mathutils
@@ -966,7 +985,7 @@ class VCGradientColor(bpy.types.Operator):
 class VCGradientStop(bpy.types.PropertyGroup):
     factor: bpy.props.FloatProperty(
         name="Position",
-        description="Ubicación de la parada en el gradiente (0.0 a 1.0)",
+        description="Location of the gradient stop (0.0 a 1.0)",
         min=0.0, max=1.0, default=0.5,
         update=vc_gradient_live_update
     )
@@ -984,6 +1003,7 @@ class VCGradientStop(bpy.types.PropertyGroup):
 class VCAddGradientStop(bpy.types.Operator):
     bl_idname = "object.vc_add_gradient_stop"
     bl_label = "Add Color Stop"
+    bl_description = "Adds a new color with its position"
 
     def execute(self, context):
         obj = context.object
@@ -1006,6 +1026,7 @@ class VCAddGradientStop(bpy.types.Operator):
 class VCRemoveGradientStop(bpy.types.Operator):
     bl_idname = "object.vc_remove_gradient_stop"
     bl_label = "Remove Color Stop"
+    bl_description = "Removes last stop that was added"
 
     def execute(self, context):
         obj = context.object
@@ -1027,7 +1048,7 @@ class VCRemoveGradientStop(bpy.types.Operator):
 class VCApplyGradient(bpy.types.Operator):
     bl_idname = "object.vc_apply_gradient"
     bl_label = "Apply"
-    bl_description = "Guardar colores de vértice y cerrar Gradient Settings"
+    bl_description = "Save vertex colors and close gradient settings"
 
     def execute(self, context):
         for obj in context.selected_objects:
@@ -1040,7 +1061,7 @@ class VCApplyGradient(bpy.types.Operator):
 class VCCancelGradient(bpy.types.Operator):
     bl_idname = "object.vc_cancel_gradient"
     bl_label = "Cancel"
-    bl_description = "Restaurar colores originales y cerrar Gradient Settings"
+    bl_description = "Restore original colors and close gradient settings"
     def execute(self, context):
         for obj in context.selected_objects:
             if obj.type == 'MESH' and obj.show_vc_gradient:
@@ -1059,7 +1080,7 @@ _vc_gradient_copy_data = {}
 class VCCopyGradientValues(bpy.types.Operator):
     bl_idname = "object.vc_copy_values"
     bl_label = "Copy Values"
-    bl_description = "Copia las paradas de gradiente y el modo actual"
+    bl_description = "Copies gradient, axis and position"
 
     def execute(self, context):
         obj = context.object
@@ -1075,7 +1096,7 @@ class VCCopyGradientValues(bpy.types.Operator):
 class VCPasteGradientValues(bpy.types.Operator):
     bl_idname = "object.vc_paste_values"
     bl_label = "Paste Values"
-    bl_description = "Pega las paradas de gradiente y el modo copiado"
+    bl_description = "Pastes stops of the gradient and its mode"
 
     def execute(self, context):
         obj = context.object
@@ -1106,7 +1127,7 @@ class VCPasteGradientValues(bpy.types.Operator):
 class VCSaveGradientPreset(bpy.types.Operator):
     bl_idname = "object.vc_save_preset"
     bl_label = "Save Preset"
-    bl_description = "Guarda el preset de gradiente bajo un nombre"
+    bl_description = "Saves a preset with the selected name"
     preset_name: bpy.props.StringProperty(name="Preset Name", default="Preset")
 
     def invoke(self, context, event):
@@ -1202,6 +1223,7 @@ def draw_preset_ui(self, context):
 class VCDeleteGradientPreset(bpy.types.Operator):
     bl_idname = "object.vc_delete_preset"
     bl_label = "Delete Preset"
+    bl_description = "Deletes selected preset from the list"
 
     @classmethod
     def poll(cls, context):
@@ -1233,7 +1255,7 @@ class VCTogglePresetList(bpy.types.Operator):
 class VCExportJson(bpy.types.Operator, ExportHelper):
     bl_idname = "object.vc_export_json"
     bl_label = "Export Gradient JSON"
-    bl_description = "Exporta axis, stops y todos los presets a un .json"
+    bl_description = "Exports axis, stops and all presets to .json"
     filename_ext = ".json"
     filter_glob: bpy.props.StringProperty(default="*.json", options={'HIDDEN'})
 
@@ -1264,7 +1286,7 @@ class VCExportJson(bpy.types.Operator, ExportHelper):
 class VCImportJson(bpy.types.Operator, ImportHelper):
     bl_idname = "object.vc_import_json"
     bl_label = "Import Gradient JSON"
-    bl_description = "Importa axis, stops y todos los presets desde un .json"
+    bl_description = "Imports axis, stops and all presets to .json"
     filename_ext = ".json"
     filter_glob: bpy.props.StringProperty(default="*.json", options={'HIDDEN'})
 
@@ -1304,6 +1326,7 @@ class VCImportJson(bpy.types.Operator, ImportHelper):
 class VCGrayscale(bpy.types.Operator):
     bl_idname = "object.vc_grayscale"
     bl_label = "Grayscale Vertex Colors"
+    bl_description = "Grayscale vertex color"
     def execute(self, context):
         obj = context.object
         attr = ensure_vertex_color_attribute(obj)
@@ -1317,6 +1340,7 @@ class VCGrayscale(bpy.types.Operator):
 class VCSepia(bpy.types.Operator):
     bl_idname = "object.vc_sepia"
     bl_label = "Sepia Vertex Colors"
+    bl_description = "Sepia Vertex Colors"
     def execute(self, context):
         obj = context.object
         attr = ensure_vertex_color_attribute(obj)
@@ -1332,6 +1356,7 @@ class VCSepia(bpy.types.Operator):
 class VCCartoon(bpy.types.Operator):
     bl_idname = "object.vc_cartoon"
     bl_label = "Cartoon Vertex Colors"
+    bl_description = "Cartoon vertex color effect"
     def execute(self, context):
         obj = context.object
         attr = ensure_vertex_color_attribute(obj)
@@ -1351,6 +1376,7 @@ class VCCartoon(bpy.types.Operator):
 class VCHot(bpy.types.Operator):
     bl_idname = "object.vc_hot"
     bl_label = "Hot Map Vertex Colors"
+    bl_description = "Applies a heat palette to the vertex colors"
     def execute(self, context):
         import math
         obj = context.object
@@ -1372,6 +1398,7 @@ class VCHot(bpy.types.Operator):
 class VCCold(bpy.types.Operator):
     bl_idname = "object.vc_cold"
     bl_label = "Cold Map Vertex Colors"
+    bl_description = "Applies a cold palette effect to the vertex colors"
     def execute(self, context):
         import math
         obj = context.object
