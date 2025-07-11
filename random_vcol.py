@@ -481,7 +481,6 @@ class VLP_OT_randomize_vertex_colors(bpy.types.Operator):
 # UI Panel
 # ------------------------------
 class VLP_PT_random_panel(bpy.types.Panel):
-    """Main panel in the sidebar for controlling the add-on."""
     bl_label = "Vertex Color Randomizer"
     bl_idname = "VLP_PT_random_panel"
     bl_space_type = 'VIEW_3D'
@@ -492,30 +491,26 @@ class VLP_PT_random_panel(bpy.types.Panel):
         layout = self.layout
         props = context.scene.vlp_scene
 
-        layout.prop(props, 'color_mode', text='Mode')
-        layout.prop(props, 'apply_to_all', text='Apply to All')
-        layout.prop(props, 'smooth', text='Smooth')
+        # Top row: Apply to All, Smooth
+        row = layout.row(align=True)
+        row.prop(props, 'apply_to_all', text='Apply to All')
+        row = layout.row(align=True)
+        row.prop(props, 'smooth', text='Smooth')
 
+        # Mode & Layer Name
+        layout.prop(props, 'color_mode', text='Mode')
+        layout.prop(props, 'attribute_name', text='Layer Name')
+
+        # Seed field
         if props.color_mode == 'SOLID':
             layout.prop(props, 'seed_solid', text='Seed')
-            layout.operator('vlp.save_preset', icon='FILE_TICK', text='Save Preset')
-            layout.operator('vlp.toggle_presets', icon='COLLAPSEMENU', text='Show Details')
-            if props.show_presets:
-                layout.template_list("UI_UL_list", "presets", props, "presets", props, "preset_index", rows=3)
-                layout.operator('vlp.apply_preset', icon='PLAY', text='Apply Preset')
-                layout.operator('vlp.delete_preset', icon='TRASH', text='Delete Preset')
-
         elif props.color_mode == 'DIFFUSE':
             layout.prop(props, 'seed_diffuse', text='Seed')
-            layout.operator('vlp.save_preset', icon='FILE_TICK', text='Save Preset')
-            layout.operator('vlp.toggle_presets', icon='COLLAPSEMENU', text='Show Details')
-            if props.show_presets:
-                layout.template_list("UI_UL_list", "presets", props, "presets", props, "preset_index", rows=3)
-                layout.operator('vlp.apply_preset', icon='PLAY', text='Apply Preset')
-                layout.operator('vlp.delete_preset', icon='TRASH', text='Delete Preset')
-
         elif props.color_mode == 'CUSTOM':
             layout.prop(props, 'seed_custom', text='Seed')
+
+        # Custom mode: show custom palette
+        if props.color_mode == 'CUSTOM':
             layout.template_list(
                 "VLP_UL_custom_colors", "custom_colors",
                 props, "custom_colors",
@@ -526,20 +521,33 @@ class VLP_PT_random_panel(bpy.types.Panel):
             row.operator('vlp.add_custom_color', icon='ADD', text='Add')
             row.operator('vlp.remove_custom_color', icon='REMOVE', text='Remove')
             layout.operator('vlp.reset_custom_colors', icon='FILE_REFRESH', text='Reset')
-            layout.operator('vlp.save_preset', icon='FILE_TICK', text='Save Preset')
-            layout.operator('vlp.toggle_presets', icon='COLLAPSEMENU', text='Show Details')
-            if props.show_presets:
-                layout.template_list("UI_UL_list", "presets", props, "presets", props, "preset_index", rows=3)
-                layout.operator('vlp.apply_preset', icon='PLAY', text='Apply Preset')
-                layout.operator('vlp.delete_preset', icon='TRASH', text='Delete Preset')
 
-        layout.prop(props, 'attribute_name', text="Layer Name")
-        layout.operator('vlp.randomize_vertex_colors', icon='SHADERFX', text='Apply Random')
-
+        # Preset buttons
+        row = layout.row(align=True)
         layout.separator()
+        row.operator('vlp.save_preset', text='Save Preset', icon='FILE_TICK')
+        row.operator('vlp.delete_preset', text='Delete Preset', icon='TRASH')
+
+        # Show presets details
+        layout.operator('vlp.toggle_presets', icon='COLLAPSEMENU', text='Show Details')
+        if props.show_presets:
+            layout.template_list(
+                "UI_UL_list", "presets",
+                props, "presets",
+                props, "preset_index",
+                rows=3
+            )
+            row = layout.row(align=True)
+            row.operator('vlp.apply_preset', text='Apply Preset', icon='PLAY')
+            row.operator('vlp.randomize_vertex_colors', text='Apply Random', icon='SHADERFX')
+        else:
+            layout.operator('vlp.randomize_vertex_colors', text='Apply Random', icon='SHADERFX')
+
+        # Export/Import
         row = layout.row(align=True)
         row.operator('vlp.export_presets', text='Export Preset', icon='EXPORT')
         row.operator('vlp.import_presets', text='Import Preset', icon='IMPORT')
+
 
 # ------------------------------
 # Registration
