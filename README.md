@@ -1,5 +1,5 @@
 ## VertexColRefineKit
-Blender set of tools to bake lighting, create dynamic vertex colors, randomize, optimize, report, and animate colors.
+Blender 4.2 set of tools to bake lighting, create dynamic vertex colors, randomize, optimize, report, and animate colors.
 
 ## Feautures
 - **Bake Lighting to Vertex Colors**
